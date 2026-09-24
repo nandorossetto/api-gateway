@@ -6,11 +6,50 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.use(helmet())
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc:  ["'self'"],
+        styletSrc:  ["'self'", "'unsafe-inline'"],
+        imgSrc:     ["'self'", "data:", "https"],
+        // fontSrc:    ["'self'"],
+        // connectSrc: ["'self'"],
+        // objectSrc:  ["'none'"],
+        // mediaSrc:   ["'none'"],
+        // frameSrc:   ["'none'"],
+      },
+    },
+    crossOriginEmbedderPolicy: false,
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true,
+    },
+  }));
   app.enableCors({
-    origin: process.env.CORS_ORIGN || '*',
+    // origin: process.env.CORS_ORIGN || '*',
+    origin: (origin, callback) => {
+      if(!origin) return callback(null, true);
+      const allowOrigins = process.env.CORS_ORIGN?.split(',') || ['*'];
+      if(allowOrigins.includes('*') || allowOrigins.includes(origin)){
+        return callback(null, true);
+      }else{
+        return callback(new Error('Not allowed by CORS'));
+      }
+    },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-    allowHeaders: ['Content-Type', 'Authorizarion']
+    allowHeaders: [
+      'Content-Type', 
+      'Authorizarion',
+      'X-Requested-With',
+      'Accept',
+      'Origin',
+      'Access-Control-Request-Method',
+      'Access-Control-Request-Headers'
+    ],
+    credentials: true,
+    maxAge: 86400 // 24h
   });
   app.useGlobalPipes(
     new ValidationPipe({
