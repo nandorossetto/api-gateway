@@ -30,7 +30,7 @@ import { LoggingMiddleware } from './middleware/logging/logging.middleware';
       }
     ]),
     ProxyModule,
-    MiddlewareModule
+    MiddlewareModule,
   ],
   controllers: [AppController],
   providers: [AppService],
